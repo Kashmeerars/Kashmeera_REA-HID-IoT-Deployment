@@ -151,7 +151,7 @@ retrain_artifacts/
 
 ---
 
-## **6. Detailed Usage**
+## **6. Detailed Usage** 
 
 ## Reproducibility Note
 
