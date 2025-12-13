@@ -11,20 +11,7 @@ from sklearn.preprocessing import StandardScaler
 
 
 class ReplayBuffer:
-    """
-    Replay Buffer for REA-HID adaptive retraining.
-    Stores flows as:
-        [13 raw features] + [vae_error] + [pseudo_label]  → length = 15
-
-    When drift is detected → retrains:
-      • a lightweight MLP (supervised)
-      • a tiny AutoEncoder (unsupervised, only on pseudo-benign flows)
-
-    Then saves a **single combined hybrid model** that outputs both:
-        output[0] → attack probability (MLP)
-        output[1] → reconstruction (AE)
-    So the live script can keep using the exact same inference path.
-    """
+    
 
     def __init__(
         self,
@@ -41,7 +28,7 @@ class ReplayBuffer:
         self.scaler = scaler if scaler is not None else StandardScaler()
         self.fitted = scaler is not None
 
-        # retraining triggers
+        
         self.retrain_ratio = float(retrain_ratio)
         self.retrain_interval = int(retrain_interval)
         self.min_samples = int(min_samples)
@@ -49,24 +36,24 @@ class ReplayBuffer:
         self.anomaly_rate_trigger = float(anomaly_rate_trigger)
         self.vae_high_threshold = vae_high_threshold
 
-        # state
+        
         self.retrain_count = 0
         self.mlp = None
         self.autoencoder = None
         self.hybrid_model = None  # final model used for inference
 
-        # artifact folder
+        
         self.artifact_dir = os.path.join(os.getcwd(), "retrain_artifacts")
         os.makedirs(self.artifact_dir, exist_ok=True)
 
-    # ------------------------------------------------------------------
+   
     def add(self, flow):
         if len(flow) != 15:
             print(f"[ReplayBuffer] Warning: Bad flow length={len(flow)}, expected 15. Skipping.")
             return
         self.buffer.append(flow)
 
-    # ------------------------------------------------------------------
+    
     def should_retrain(self):
         n = len(self.buffer)
         if n < self.min_samples:
@@ -95,15 +82,15 @@ class ReplayBuffer:
             print(f"[ReplayBuffer] Retrain skipped — not enough pseudo-positive samples")
         return False
 
-    # ------------------------------------------------------------------
+    
     def retrain_hybrid(self):
-        """Retrain BOTH MLP and AutoEncoder → save a single hybrid model."""
+        
         n = len(self.buffer)
         if n < self.min_samples:
             print(f"[ReplayBuffer] Not enough samples ({n}) for retrain.")
             return
 
-        # === 1. Prepare data ===
+       
         X_raw = np.array([f[:-2] for f in self.buffer], dtype=np.float32)
         y = np.array([int(f[-1]) for f in self.buffer], dtype=np.int32)
 
@@ -118,7 +105,7 @@ class ReplayBuffer:
         else:
             X_scaled = self.scaler.transform(X_raw)
 
-        # === 2. Train MLP (supervised) ===
+        
         pos_frac = y.mean()
         class_weight = None
         if 0 < pos_frac < 0.3:
@@ -133,7 +120,7 @@ class ReplayBuffer:
         mlp.compile(optimizer='adam', loss='binary_crossentropy')
         mlp.fit(X_scaled, y, epochs=5, batch_size=64, verbose=0, class_weight=class_weight)
 
-        # === 3. Train tiny AE on pseudo-benign flows only ===
+        
         benign_mask = (y == 0)
         if np.sum(benign_mask) < 100:
             print("[ReplayBuffer] Warning: Not enough pseudo-benign samples for AE training. Skipping AE update.")
@@ -149,7 +136,7 @@ class ReplayBuffer:
             autoencoder.compile(optimizer='adam', loss='mse')
             autoencoder.fit(X_benign, X_benign, epochs=12, batch_size=64, verbose=0)
             print(f"[ReplayBuffer] AutoEncoder retrained on {X_benign.shape[0]} pseudo-benign flows")
-        # === 4. Build final hybrid model (MLP + AE) ===
+        
         input_layer = Input(shape=(13,), name='input')
         clf_out = mlp(input_layer)
         recon_out = autoencoder(input_layer) if autoencoder else input_layer  # fallback = identity
@@ -160,7 +147,7 @@ class ReplayBuffer:
         self.autoencoder = autoencoder
         self.retrain_count += 1
 
-        # === 5. Save ===
+        
         fname = os.path.join(self.artifact_dir, f"rea_hid_hybrid_retrain_{self.retrain_count}.keras")
         hybrid.save(fname)
         meta = {
@@ -175,9 +162,9 @@ class ReplayBuffer:
 
         print(f"[ReplayBuffer] Full HYBRID model (MLP + AE) #{self.retrain_count} saved → {os.path.basename(fname)}")
 
-    # ------------------------------------------------------------------
+   
     def predict(self, raw_features_13):
-        """Predict using the latest hybrid model (MLP prob + reconstruction)."""
+        
         if self.hybrid_model is None:
             return None, None  # no model yet
 
@@ -185,7 +172,7 @@ class ReplayBuffer:
         prob, recon = self.hybrid_model.predict(X_scaled, verbose=0)
         return float(prob[0][0]), recon[0]
 
-    # ------------------------------------------------------------------
+   
     def summary(self):
         n = len(self.buffer)
         if n == 0:
