@@ -153,6 +153,12 @@ retrain_artifacts/
 
 ## **6. Detailed Usage**
 
+## Reproducibility Note
+
+All scripts assume execution from within the cloned repository.
+Paths are relative by design and can be overridden via CLI arguments.
+
+
 ### **Generate Synthetic Training Dataset**
 
 ```
