@@ -183,6 +183,7 @@ python3 training/train_rea_hid_v2.py
 python3 evaluation/rea_hid_eval_server.py \
   --csv data/demo_short.csv \
   --model_path models/rea_hid_final.keras \
+  --tflite_path models/rea_hid_final_float16.tflite \
   --scaler_path models/rea_hid_scaler.pkl \
   --threshold_path models/rea_hid_threshold.npy
 
