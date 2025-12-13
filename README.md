@@ -1,5 +1,5 @@
 # Kashmeera_REA-HID-IoT-Deployment
-Hybrid Intrusion Detection and Drift Adaptation for IoT Gateways (Raspberry Pi Deployment)
+Hybrid Intrusion Detection and Drift Adaptation for IoT Gateways (Raspberry Pi Deployment).
 A practical deployment on AI Server and Raspberry Pi 5.
 ### 1. Project Overview
 REA-HID is a **hybrid intrusion detection system (IDS)** for IoT networks.
@@ -24,7 +24,7 @@ generation → training → deployment → drift adaptation → evaluation.
 
 ## **2. Why This Project Is Useful**
 
-* Demonstrates a **state-of-the-art adaptive IDS** for IoT
+* Demonstrates an **adaptive IDS** for IoT
 * Detects both high-rate and low-rate attacks
 * Learns and adapts to network drift **in real time**
 * Lightweight model suitable for **edge devices (RPi5)**
@@ -37,8 +37,8 @@ generation → training → deployment → drift adaptation → evaluation.
 REA-HID-IoT-Deployment/
 │
 ├── data/                         # Labeled test & drift datasets (CSV)
-│   ├── demo_short.csv
-│   ├── live_drift_v2_13feat.csv
+│   ├── demo_short.csv            # Subset of live_drift_v2_13feat.csv for inference only
+│   ├── live_drift_v2_13feat.csv  # For demonstrating drift and retraining
 │   └── live_drift_strong.csv
 │
 ├── generators/                   # Synthetic data & drift generators
@@ -92,9 +92,9 @@ pip3 install numpy pandas joblib psutil
 pip3 install tflite-runtime
 ```
 
-## **5. Quick Start (Reviewers can run in <30 seconds)**
+## **5. Quick Start  **
 
-### **A) Offline Evaluation (AI Server)**
+### **A) Offline Evaluation **
 
 Run this to verify the IDS model and metrics:
 
@@ -128,7 +128,7 @@ Outputs include:
 
 ---
 
-### **C) Full Live Drift Engine (AI Server Only)**
+### **C) Full Live Drift Engine **
 
 Runs streaming inference + drift detection + adaptive retraining:
 
@@ -171,7 +171,7 @@ python3 generators/gen_live_drift_v2.py
 python3 training/train_rea_hid_v2.py
 ```
 
-### **Run Offline Evaluation on Any CSV**
+### **Run Offline Evaluation on CSV**
 
 ```
 python3 evaluation/rea_hid_eval_server.py --csv data/demo_short.csv
