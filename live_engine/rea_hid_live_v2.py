@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-rea_hid_live_v2.py — FINAL LIVE ENGINE (FULL HYBRID ADAPTATION)
-Run with strong drift: python3 rea_hid_live_v2.py --once --strong_drift
-"""
+
 import os
 import sys
 import time
@@ -83,38 +80,38 @@ def process_batch(df, model, scaler, threshold, ph, rb, args):
     X_raw = df[FEATURE_ORDER].values.astype(np.float32)
     X_scaled = scaler.transform(X_raw)
 
-    # Original model predictions (always available for comparison)
+    
     orig_mlp_probs, orig_recon = model.predict(X_scaled)
     orig_errors = np.mean(np.abs(X_scaled - orig_recon), axis=1)
 
     for i in range(len(df)):
         stats["processed"] += 1
 
-        # Get prediction from retrained hybrid model (if exists)
+        
         retrained_mlp_prob, retrained_recon = rb.predict(X_raw[i])
 
-        # Fallback to original model if no retrained model yet
+       
         final_mlp_prob = retrained_mlp_prob if retrained_mlp_prob is not None else orig_mlp_probs[i]
         final_recon = retrained_recon if retrained_recon is not None else orig_recon[i]
 
-        # Compute current reconstruction error using the active model
+      
         current_error = np.mean(np.abs(X_scaled[i] - final_recon))
 
-        # Live print only when using retrained model
+        
         if retrained_mlp_prob is not None:
             print(f"Flow {stats['processed']:5d}: original MLP={orig_mlp_probs[i]:.3f} → "
                   f"retrained MLP={final_mlp_prob:.3f}  (error: {current_error:.4f})")
             has_retrained = True
 
-        # Collect for final summary
+       
         pre_retrain_probs.append(orig_mlp_probs[i])
         post_retrain_probs.append(final_mlp_prob)
 
-        # Final hybrid decision
+     
         pred = 1 if (final_mlp_prob > 0.5 or current_error > threshold) else 0
         stats["attack" if pred else "benign"] += 1
 
-        # Pseudo-labeling (used for buffer)
+        
         pseudo = 0
         if final_mlp_prob >= args.pseudo_mlp_conf:
             pseudo = 1
@@ -122,11 +119,11 @@ def process_batch(df, model, scaler, threshold, ph, rb, args):
             pseudo = 1
         stats["pseudo1" if pseudo else "pseudo0"] += 1
 
-        # Add to replay buffer
+      
         flow = np.concatenate([X_raw[i], [current_error, pseudo]])
         rb.add(flow)
 
-        # Drift detection
+       
         if ph.update(current_error):
             stats["drift"] += 1
             print(f"DRIFT DETECTED at flow {stats['processed']}")
