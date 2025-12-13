@@ -180,15 +180,35 @@ python3 training/train_rea_hid_v2.py
 ### **Run Offline Evaluation on CSV**
 
 ```
-python3 evaluation/rea_hid_eval_server.py --csv data/demo_short.csv
+python3 evaluation/rea_hid_eval_server.py \
+  --csv data/demo_short.csv \
+  --model_path models/rea_hid_final.keras \
+  --scaler_path models/rea_hid_scaler.pkl \
+  --threshold_path models/rea_hid_threshold.npy
+
 ```
 
 ### **Run Raspberry Pi Inference**
 
 ```
-python3 evaluation/rea_hid_live_pi.py --csv demo_short.csv
+python3 evaluation/rea_hid_live_pi.py \
+  --csv data/demo_short.csv \
+  --tflite models/rea_hid_final_float16.tflite \
+  --scaler models/rea_hid_scaler.pkl \
+  --threshold models/rea_hid_threshold.npy
 ```
+### **Run REA-HID live engine**
 
+```
+python3 live_engine/rea_hid_live_v2.py \
+  --once \
+  --prefer_tflite \
+  --zeek_dir data \
+  --model_path models/rea_hid_final.keras \
+  --tflite_path models/rea_hid_final_float16.tflite \
+  --scaler_path models/rea_hid_scaler.pkl \
+  --threshold_path models/rea_hid_threshold.npy
+```
 ---
 
 ## **7. Architecture Diagram**
