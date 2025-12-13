@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""
-train_rea_hid_v2.py — FINAL, 100% WORKING VERSION
-Trains on: synthetic_training_v2_13feat.csv
-Saves to: models_v2/
-Gives you F1 ≈ 0.98+ and perfect threshold
-"""
+
 
 import os
 import random
@@ -21,9 +16,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import f1_score
 
-# -----------------------
-# CONFIG
-# -----------------------
+
 SEED = 42
 DATA_CSV = os.path.expanduser("~/projects/replay_emulation_ids/zeek_logs/synthetic_training_v2/synthetic_training_v2_13feat.csv")
 OUT_DIR = os.path.expanduser("~/projects/replay_emulation_ids/models_v2")
@@ -48,9 +41,6 @@ np.random.seed(SEED)
 tf.random.set_seed(SEED)
 os.environ["PYTHONHASHSEED"] = str(SEED)
 
-# -----------------------
-# Load data
-# -----------------------
 df = pd.read_csv(DATA_CSV)[FEATURE_ORDER + ["Label"]]
 X = df[FEATURE_ORDER].astype(np.float32).values
 y = df["Label"].values
@@ -58,9 +48,7 @@ y = df["Label"].values
 X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=SEED, stratify=y)
 X_val,   X_test, y_val,   y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=SEED, stratify=y_temp)
 
-# -----------------------
-# Scale
-# -----------------------
+
 scaler = StandardScaler()
 X_train_s = scaler.fit_transform(X_train)
 X_val_s   = scaler.transform(X_val)
@@ -70,9 +58,7 @@ joblib.dump(scaler, SCALER_PATH)
 with open(FEATURE_JSON, "w") as f:
     json.dump(FEATURE_ORDER, f)
 
-# -----------------------
-# Model
-# -----------------------
+
 inp = Input(shape=(13,))
 x = Dense(128, activation="relu")(inp)
 x = Dense(64, activation="relu")(x)
@@ -93,9 +79,7 @@ model.compile(
     metrics={"classifier": "accuracy"}
 )
 
-# -----------------------
-# Train with proper EarlyStopping
-# -----------------------
+
 model.fit(
     X_train_s,
     {"classifier": y_train, "reconstruction": X_train_s},
@@ -108,18 +92,14 @@ model.fit(
 
 model.save(MODEL_PATH)
 
-# -----------------------
-# Threshold (95th percentile of benign val errors)
-# -----------------------
+
 val_clf, val_recon = model.predict(X_val_s, verbose=0)
 val_errors = np.mean(np.abs(X_val_s - val_recon), axis=1)
 benign_errors = val_errors[y_val == 0]
 threshold = np.percentile(benign_errors, 95)
 np.save(THRESH_PATH, np.array([threshold]))
 
-# -----------------------
-# TFLite float16
-# -----------------------
+
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
 converter.target_spec.supported_types = [tf.float16]
@@ -127,9 +107,7 @@ tflite_model = converter.convert()
 with open(TFLITE_PATH, "wb") as f:
     f.write(tflite_model)
 
-# -----------------------
-# Final test metrics
-# -----------------------
+
 test_clf, test_recon = model.predict(X_test_s, verbose=0)
 test_mlp = (test_clf.ravel() > 0.5).astype(int)
 test_vae = (np.mean(np.abs(X_test_s - test_recon), axis=1) > threshold).astype(int)
