@@ -96,14 +96,8 @@ pip3 install tflite-runtime
 
 ### **A) Offline Evaluation **
 
-Run this to verify the IDS model and metrics:
-
-```bash
-python3 evaluation/rea_hid_eval_server.py --csv data/demo_short.csv
-```
-
+Run this to verify the IDS model and metrics, 
 This prints:
-
 * Accuracy
 * Precision
 * Recall
@@ -114,14 +108,8 @@ This prints:
 
 ### **B) Raspberry Pi Inference**
 
-After copying the `models/` folder and `demo_short.csv`:
-
-```bash
-python3 evaluation/rea_hid_live_pi.py --csv demo_short.csv --tflite models/rea_hid_final_float16.tflite
-```
-
+This script is to help in the inference of the model.
 Outputs include:
-
 * Per-flow MLP + AE hybrid decision
 * Reconstruction errors
 * F1 score matching server inference
@@ -130,14 +118,8 @@ Outputs include:
 
 ### **C) Full Live Drift Engine **
 
-Runs streaming inference + drift detection + adaptive retraining:
-
-```bash
-python3 live_engine/rea_hid_live_v2.py --strong_drift --prefer_tflite
-```
-
+Runs streaming inference + drift detection + adaptive retraining.
 Outputs:
-
 * Page–Hinkley drift alerts
 * Replay Buffer pseudo-label summary
 * Retraining triggers + hybrid model exports
@@ -217,7 +199,7 @@ python3 live_engine/rea_hid_live_v2.py \
 ![REA-HID Architecture](code_arch.jpg)
 
 
-## **10. Credits**
+## **8. Credits**
 
 Developed by: **Kashmeera R**
 Program: M.Tech Cybersecurity Systems & Networks
